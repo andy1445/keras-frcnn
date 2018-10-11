@@ -94,7 +94,7 @@ print('Num classes (including bg) = {}'.format(len(classes_count)))
 with open(options.config_filename, 'wb') as config_f:
     pickle.dump(C, config_f)
     print('Config has been written to {}, and can be loaded when testing to ensure correct results'.format(
-        config_output_filename))
+        options.config_filename))
 
 # get training and validation data
 random.shuffle(all_imgs)
