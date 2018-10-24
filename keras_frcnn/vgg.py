@@ -29,13 +29,12 @@ def get_weight_path():
 
 def get_img_output_length(width, height):
     def get_output_length(input_length):
-        return input_length//16
+        return input_length // 16
 
-    return get_output_length(width), get_output_length(height)    
+    return get_output_length(width), get_output_length(height)
+
 
 def nn_base(input_tensor=None, trainable=False):
-
-
     # Determine proper input shape
     if K.image_dim_ordering() == 'th':
         input_shape = (3, None, None)
@@ -85,9 +84,10 @@ def nn_base(input_tensor=None, trainable=False):
 
     return x
 
-def rpn(base_layers, num_anchors):
 
-    x = Conv2D(512, (3, 3), padding='same', activation='relu', kernel_initializer='normal', name='rpn_conv1')(base_layers)
+def rpn(base_layers, num_anchors):
+    x = Conv2D(512, (3, 3), padding='same', activation='relu', kernel_initializer='normal', name='rpn_conv1')(
+        base_layers)
 
     x_class = Conv2D(num_anchors, (1, 1), activation='sigmoid', kernel_initializer='uniform', name='rpn_out_class')(x)
     x_regr = Conv2D(num_anchors * 4, (1, 1), activation='linear', kernel_initializer='zero', name='rpn_out_regress')(x)
@@ -95,16 +95,15 @@ def rpn(base_layers, num_anchors):
     return [x_class, x_regr, base_layers]
 
 
-def classifier(base_layers, input_rois, num_rois, nb_classes = 21, trainable=False):
-
+def classifier(base_layers, input_rois, num_rois, nb_classes=21, trainable=False):
     # compile times on theano tend to be very high, so we use smaller ROI pooling regions to workaround
 
     if K.backend() == 'tensorflow':
         pooling_regions = 7
-        input_shape = (num_rois,7,7,512)
+        input_shape = (num_rois, 7, 7, 512)
     elif K.backend() == 'theano':
         pooling_regions = 7
-        input_shape = (num_rois,512,7,7)
+        input_shape = (num_rois, 512, 7, 7)
 
     out_roi_pool = RoiPoolingConv(pooling_regions, num_rois)([base_layers, input_rois])
 
@@ -114,10 +113,10 @@ def classifier(base_layers, input_rois, num_rois, nb_classes = 21, trainable=Fal
     out = TimeDistributed(Dense(4096, activation='relu', name='fc2'))(out)
     out = TimeDistributed(Dropout(0.5))(out)
 
-    out_class = TimeDistributed(Dense(nb_classes, activation='softmax', kernel_initializer='zero'), name='dense_class_{}'.format(nb_classes))(out)
+    out_class = TimeDistributed(Dense(nb_classes, activation='softmax', kernel_initializer='zero'),
+                                name='dense_class_{}'.format(nb_classes))(out)
     # note: no regression target for bg class
-    out_regr = TimeDistributed(Dense(4 * (nb_classes-1), activation='linear', kernel_initializer='zero'), name='dense_regress_{}'.format(nb_classes))(out)
+    out_regr = TimeDistributed(Dense(4 * (nb_classes - 1), activation='linear', kernel_initializer='zero'),
+                               name='dense_regress_{}'.format(nb_classes))(out)
 
     return [out_class, out_regr]
-
-
