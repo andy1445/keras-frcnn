@@ -33,6 +33,8 @@ class FixedBatchNormalization(Layer):
                                     regularizer=self.beta_regularizer,
                                     name='{}_beta'.format(self.name),
                                     trainable=False)
+        # instead of moving mean like in regular batch normalization, we have running mean
+        # and they are named
         self.running_mean = self.add_weight(shape, initializer='zero',
                                             name='{}_running_mean'.format(self.name),
                                             trainable=False)
