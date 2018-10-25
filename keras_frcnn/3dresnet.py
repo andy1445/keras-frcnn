@@ -8,7 +8,8 @@ Adapted from code contributed by BigMoyan.
 from __future__ import print_function
 from __future__ import absolute_import
 
-from keras.layers import Input, Add, Dense, Activation, Flatten, TimeDistributed, BatchNormalization, Convolution3D, ZeroPadding3D, MaxPooling3D, AveragePooling3D
+from keras.layers import Input, Add, Dense, Activation, Flatten, TimeDistributed, BatchNormalization, Convolution3D, \
+    ZeroPadding3D, MaxPooling3D, AveragePooling3D
 
 from keras import backend as K
 
@@ -77,7 +78,8 @@ def identity_block_td(input_tensor, kernel_size, filters, stage, block, trainabl
     x = Activation('relu')(x)
 
     x = TimeDistributed(
-        Convolution3D(nb_filter2, (kernel_size, kernel_size, kernel_size), trainable=trainable, kernel_initializer='normal',
+        Convolution3D(nb_filter2, (kernel_size, kernel_size, kernel_size), trainable=trainable,
+                      kernel_initializer='normal',
                       padding='same'), name=conv_name_base + '2b')(x)
     x = TimeDistributed(BatchNormalization(axis=bn_axis), name=bn_name_base + '2b')(x)
     x = Activation('relu')(x)
@@ -136,8 +138,9 @@ def conv_block_td(input_tensor, kernel_size, filters, stage, block, input_shape,
     x = TimeDistributed(BatchNormalization(axis=bn_axis), name=bn_name_base + '2a')(x)
     x = Activation('relu')(x)
 
-    x = TimeDistributed(Convolution3D(nb_filter2, (kernel_size, kernel_size, kernel_size), padding='same', trainable=trainable,
-                                      kernel_initializer='normal'), name=conv_name_base + '2b')(x)
+    x = TimeDistributed(
+        Convolution3D(nb_filter2, (kernel_size, kernel_size, kernel_size), padding='same', trainable=trainable,
+                      kernel_initializer='normal'), name=conv_name_base + '2b')(x)
     x = TimeDistributed(BatchNormalization(axis=bn_axis), name=bn_name_base + '2b')(x)
     x = Activation('relu')(x)
 
@@ -166,7 +169,6 @@ def nn_base(input_tensor=None, trainable=False):
             img_input = Input(tensor=input_tensor, shape=input_shape)
         else:
             img_input = input_tensor
-
 
     bn_axis = 4
 

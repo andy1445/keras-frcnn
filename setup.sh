@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 sudo apt-get update && sudo apt-get -y upgrade
 sudo apt install python3-pip python3-tk
 pip3 install setuptools 
