@@ -63,7 +63,8 @@ def get_data(input_path, C):
                 if filename not in all_imgs:
                     all_imgs[filename] = {}
 
-                    img = cv2.imread(filename)
+                    # img = cv2.imread(filename)
+                    img = np.load('/home/cc/Data/' + filename)
                     (rows, cols, depth) = img.shape[:3]
                     all_imgs[filename]['filepath'] = filename
                     all_imgs[filename]['width'] = cols

@@ -169,10 +169,12 @@ del x1
 
 # save all nodules in numpy form
 for id in IDs:
+    print(id)
     with open(savePath + str(id), "rb") as f:
         loadedData = pickle.load(f)
         imageDict = OrderedDict(sorted(loadedData.items(), key=lambda t: t[0]))
         npmatrix = np.array(list(imageDict.values()))
+        npmatrix = np.transpose(npmatrix, (1, 2, 0))
         np.save(savePath + str(id) + '.npy', npmatrix)
 
 # headerList = list(allNodules)
@@ -242,9 +244,9 @@ print("Positive samples: " + str(len(positivelist)))
 print("Negative samples: " + str(len(negativelist)))
 
 # save poslist to file
-with open("data.txt",'w') as f:
+with open("data.txt", 'w') as f:
     for line in positivelist:
-        f.write(','.join(line)+'\n')
+        f.write(','.join(line) + '\n')
 
 # print (counterx)
 # print (counterzeta)
