@@ -12,7 +12,7 @@ http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtrainval_06-Nov-2007.tar
 - simple_parser.py provides an alternative way to input data, using a text file. Simply provide a text file, with each
 line containing:
 
-    `filepath,x1,y1,x2,y2,class_name`
+    `filepath,x1,y1,x2,y2,z1,z2,class_name`
 
     For example:
 
