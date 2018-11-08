@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 sudo apt-get update && sudo apt-get -y upgrade
-sudo apt install python3-pip python3-tk Xvfb
+sudo apt install python3-pip python3-tk xvfb
 pip3 install setuptools 
 pip3 install tensorflow-gpu keras==2.2.2 opencv-python
 wget http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar

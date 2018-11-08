@@ -1,4 +1,6 @@
 from __future__ import division
+
+import math
 import random
 import pprint
 import sys
@@ -42,16 +44,27 @@ parser.add_option("--output_weight_path", dest="output_weight_path", help="Outpu
                   default='./model_frcnn.hdf5')
 parser.add_option("--input_weight_path", dest="input_weight_path",
                   help="Input path for weights. If not specified, will try to load default weights provided by keras.")
+parser.add_option("--3D", dest="use3d", help="use 3d input", default=False)
 
 (options, args) = parser.parse_args()
 
 # pass the settings from the command line, and persist them in the config object
 C = config.Config()
+C.use3d = bool(options.use3d)
 C.use_horizontal_flips = bool(options.horizontal_flips)
 C.use_vertical_flips = bool(options.vertical_flips)
 C.rot_90 = bool(options.rot_90)
 C.model_path = options.output_weight_path
 C.num_rois = int(options.num_rois)
+if C.use3d == False:
+    C.anchor_box_ratios = [[1, 1],
+                           [1. / math.sqrt(2), 2. / math.sqrt(2)],
+                           [2. / math.sqrt(2), 1. / math.sqrt(2)]]
+else:
+    C.anchor_box_ratios = [[1, 1, 1],
+                           [1. / math.sqrt(2), 2. / math.sqrt(2), 1. / math.sqrt(2)],
+                           [2. / math.sqrt(2), 1. / math.sqrt(2), 1. / math.sqrt(2)],
+                           [1. / math.sqrt(2), 1. / math.sqrt(2), 2. / math.sqrt(2)]]
 
 if not options.train_path:  # if filename is not given
     parser.error('Error: path to training data must be specified. Pass --path to command line')
@@ -67,9 +80,11 @@ if options.network == 'vgg':
     C.network = 'vgg'
     from keras_frcnn import vgg as nn
 elif options.network == 'resnet50':
-    from keras_frcnn import resnet as nn
-
     C.network = 'resnet50'
+    from keras_frcnn import resnet as nn
+elif C.use3d == True:
+    C.network = 'resnet3d50'
+    from keras_frcnn import resnet3d as nn
 else:
     print('Not a valid model')
     raise ValueError
@@ -81,7 +96,7 @@ else:
     # set the path to weights based on backend and model
     C.base_net_weights = nn.get_weight_path()
 
-all_imgs, classes_count, class_mapping = get_data(options.train_path)
+all_imgs, classes_count, class_mapping = get_data(options.train_path, C)
 
 # check classes
 if 'bg' not in classes_count:
@@ -110,12 +125,14 @@ data_gen_train = data_generators.get_anchor_gt(train_imgs, classes_count, C, nn.
 data_gen_val = data_generators.get_anchor_gt(val_imgs, classes_count, C, nn.get_img_output_length,
                                              K.image_dim_ordering(), mode='val')
 
-if K.image_dim_ordering() == 'th':
-    input_shape_img = (3, None, None)
-else:
+if C.use3d == False:
     input_shape_img = (None, None, 3)
+    roi_input = Input(shape=(None, 4))
+else:
+    input_shape_img = (None, None, None, 3)
+    roi_input = Input(shape=(None, 6))
+
 img_input = Input(shape=input_shape_img)
-roi_input = Input(shape=(None, 4))
 
 # define the base network (resnet here, can be VGG, Inception, etc)
 shared_layers = nn.nn_base(img_input, trainable=True)

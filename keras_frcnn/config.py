@@ -18,7 +18,8 @@ class Config:
         self.anchor_box_scales = [128, 256, 512]
 
         # anchor box ratios
-        self.anchor_box_ratios = [[1, 1], [1. / math.sqrt(2), 2. / math.sqrt(2)],
+        self.anchor_box_ratios = [[1, 1],
+                                  [1. / math.sqrt(2), 2. / math.sqrt(2)],
                                   [2. / math.sqrt(2), 1. / math.sqrt(2)]]
 
         # size to resize the smallest side of the image
@@ -29,7 +30,7 @@ class Config:
         self.img_scaling_factor = 1.0
 
         # number of ROIs at once
-        self.num_rois = 4
+        self.num_rois = 6
 
         # stride at the RPN (this depends on the network configuration)
         self.rpn_stride = 16

@@ -23,7 +23,7 @@ def get_weight_path():
         return 'resnet50_weights_tf_dim_ordering_tf_kernels.h5'
 
 
-def get_img_output_length(width, height):
+def get_img_output_length(width, height, depth):
     def get_output_length(input_length):
         # zero_pad
         input_length += 6
@@ -34,7 +34,7 @@ def get_img_output_length(width, height):
             input_length = (input_length - filter_size + stride) // stride
         return input_length
 
-    return get_output_length(width), get_output_length(height)
+    return get_output_length(width), get_output_length(height), get_output_length(depth)
 
 
 def identity_block(input_tensor, kernel_size, filters, stage, block, trainable=True):
