@@ -7,77 +7,126 @@ import threading
 import itertools
 
 
-def augment(img_data, config, augment=True):
+def augment(img_data, C, augment=True):
     assert 'filepath' in img_data
     assert 'bboxes' in img_data
     assert 'width' in img_data
     assert 'height' in img_data
 
-    img_data_aug = copy.deepcopy(img_data)
-
-    img = cv2.imread(img_data_aug['filepath'])
-
-    if augment:
-        rows, cols = img.shape[:2]
-
-        if config.use_horizontal_flips and np.random.randint(0, 2) == 0:
-            img = cv2.flip(img, 1)
-            for bbox in img_data_aug['bboxes']:
-                x1 = bbox['x1']
-                x2 = bbox['x2']
-                bbox['x2'] = cols - x1
-                bbox['x1'] = cols - x2
-
-        if config.use_vertical_flips and np.random.randint(0, 2) == 0:
-            img = cv2.flip(img, 0)
-            for bbox in img_data_aug['bboxes']:
-                y1 = bbox['y1']
-                y2 = bbox['y2']
-                bbox['y2'] = rows - y1
-                bbox['y1'] = rows - y2
-
-        if config.rot_90:
-            angle = np.random.choice([0, 90, 180, 270], 1)[0]
-            if angle == 270:
-                img = np.transpose(img, (1, 0, 2))
-                img = cv2.flip(img, 0)
-            elif angle == 180:
-                img = cv2.flip(img, -1)
-            elif angle == 90:
-                img = np.transpose(img, (1, 0, 2))
+    if C.use3d == False:
+        img_data_aug = copy.deepcopy(img_data)
+        img = cv2.imread(img_data_aug['filepath'])
+        if augment:
+            rows, cols = img.shape[:2]
+            if C.use_horizontal_flips and np.random.randint(0, 2) == 0:
                 img = cv2.flip(img, 1)
-            elif angle == 0:
-                pass
-
-            for bbox in img_data_aug['bboxes']:
-                x1 = bbox['x1']
-                x2 = bbox['x2']
-                y1 = bbox['y1']
-                y2 = bbox['y2']
-                if angle == 270:
-                    bbox['x1'] = y1
-                    bbox['x2'] = y2
-                    bbox['y1'] = cols - x2
-                    bbox['y2'] = cols - x1
-                elif angle == 180:
+                for bbox in img_data_aug['bboxes']:
+                    x1 = bbox['x1']
+                    x2 = bbox['x2']
                     bbox['x2'] = cols - x1
                     bbox['x1'] = cols - x2
+            if C.use_vertical_flips and np.random.randint(0, 2) == 0:
+                img = cv2.flip(img, 0)
+                for bbox in img_data_aug['bboxes']:
+                    y1 = bbox['y1']
+                    y2 = bbox['y2']
                     bbox['y2'] = rows - y1
                     bbox['y1'] = rows - y2
+            if C.rot_90:
+                angle = np.random.choice([0, 90, 180, 270], 1)[0]
+                if angle == 270:
+                    img = np.transpose(img, (1, 0, 2))
+                    img = cv2.flip(img, 0)
+                elif angle == 180:
+                    img = cv2.flip(img, -1)
                 elif angle == 90:
-                    bbox['x1'] = rows - y2
-                    bbox['x2'] = rows - y1
-                    bbox['y1'] = x1
-                    bbox['y2'] = x2
+                    img = np.transpose(img, (1, 0, 2))
+                    img = cv2.flip(img, 1)
                 elif angle == 0:
                     pass
+                for bbox in img_data_aug['bboxes']:
+                    x1 = bbox['x1']
+                    x2 = bbox['x2']
+                    y1 = bbox['y1']
+                    y2 = bbox['y2']
+                    if angle == 270:
+                        bbox['x1'] = y1
+                        bbox['x2'] = y2
+                        bbox['y1'] = cols - x2
+                        bbox['y2'] = cols - x1
+                    elif angle == 180:
+                        bbox['x2'] = cols - x1
+                        bbox['x1'] = cols - x2
+                        bbox['y2'] = rows - y1
+                        bbox['y1'] = rows - y2
+                    elif angle == 90:
+                        bbox['x1'] = rows - y2
+                        bbox['x2'] = rows - y1
+                        bbox['y1'] = x1
+                        bbox['y2'] = x2
+                    elif angle == 0:
+                        pass
+            img_data_aug['width'] = img.shape[0]
+            img_data_aug['height'] = img.shape[1]
+        else:
+            img_data_aug = copy.deepcopy(img_data)
+            # img = cv2.imread(img_data_aug['filepath'])
+            img = np.load('/home/cc/Data/' + img_data_aug['filepath'])
+            img = np.transpose(img, (1, 2, 0))
+            # if augment:
+            #     rows, cols = img.shape[:2]
+            #     if C.use_horizontal_flips and np.random.randint(0, 2) == 0:
+            #         img = cv2.flip(img, 1)
+            #         for bbox in img_data_aug['bboxes']:
+            #             x1 = bbox['x1']
+            #             x2 = bbox['x2']
+            #             bbox['x2'] = cols - x1
+            #             bbox['x1'] = cols - x2
+            #     if C.use_vertical_flips and np.random.randint(0, 2) == 0:
+            #         img = cv2.flip(img, 0)
+            #         for bbox in img_data_aug['bboxes']:
+            #             y1 = bbox['y1']
+            #             y2 = bbox['y2']
+            #             bbox['y2'] = rows - y1
+            #             bbox['y1'] = rows - y2
+            #     if C.rot_90:
+            #         angle = np.random.choice([0, 90, 180, 270], 1)[0]
+            #         if angle == 270:
+            #             img = np.transpose(img, (1, 0, 2))
+            #             img = cv2.flip(img, 0)
+            #         elif angle == 180:
+            #             img = cv2.flip(img, -1)
+            #         elif angle == 90:
+            #             img = np.transpose(img, (1, 0, 2))
+            #             img = cv2.flip(img, 1)
+            #         elif angle == 0:
+            #             pass
+            #         for bbox in img_data_aug['bboxes']:
+            #             x1 = bbox['x1']
+            #             x2 = bbox['x2']
+            #             y1 = bbox['y1']
+            #             y2 = bbox['y2']
+            #             if angle == 270:
+            #                 bbox['x1'] = y1
+            #                 bbox['x2'] = y2
+            #                 bbox['y1'] = cols - x2
+            #                 bbox['y2'] = cols - x1
+            #             elif angle == 180:
+            #                 bbox['x2'] = cols - x1
+            #                 bbox['x1'] = cols - x2
+            #                 bbox['y2'] = rows - y1
+            #                 bbox['y1'] = rows - y2
+            #             elif angle == 90:
+            #                 bbox['x1'] = rows - y2
+            #                 bbox['x2'] = rows - y1
+            #                 bbox['y1'] = x1
+            #                 bbox['y2'] = x2
+            #             elif angle == 0:
+            #                 pass
+            img_data_aug['width'] = img.shape[0]
+            img_data_aug['height'] = img.shape[1]
 
-    img_data_aug['width'] = img.shape[0]
-    img_data_aug['height'] = img.shape[1]
-    if config.use3d == True:
-        img_data_aug['depth'] = img.shape[2]
-
-    return img_data_aug, img
+        return img_data_aug, img
 
 
 def union(au, bu, area_intersection):
@@ -353,12 +402,14 @@ def calc_rpn3d(C, img_data, width, height, depth, resized_width, resized_height,
 
     if len(pos_locs[0]) > num_regions / 2:
         val_locs = random.sample(range(len(pos_locs[0])), len(pos_locs[0]) - num_regions / 2)
-        y_is_box_valid[0, pos_locs[0][val_locs], pos_locs[1][val_locs], pos_locs[2][val_locs], pos_locs[3][val_locs]] = 0
+        y_is_box_valid[
+            0, pos_locs[0][val_locs], pos_locs[1][val_locs], pos_locs[2][val_locs], pos_locs[3][val_locs]] = 0
         num_pos = num_regions / 2
 
     if len(neg_locs[0]) + num_pos > num_regions:
         val_locs = random.sample(range(len(neg_locs[0])), len(neg_locs[0]) - num_pos)
-        y_is_box_valid[0, neg_locs[0][val_locs], neg_locs[1][val_locs], neg_locs[2][val_locs], pos_locs[3][val_locs]] = 0
+        y_is_box_valid[
+            0, neg_locs[0][val_locs], neg_locs[1][val_locs], neg_locs[2][val_locs], pos_locs[3][val_locs]] = 0
 
     y_rpn_cls = np.concatenate([y_is_box_valid, y_rpn_overlap], axis=1)
     y_rpn_regr = np.concatenate([np.repeat(y_rpn_overlap, 6, axis=1), y_rpn_regr], axis=1)
