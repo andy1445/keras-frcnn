@@ -167,6 +167,9 @@ noduleSet = set(nodulesToUse["NoduleID"])
 del nodulesToUse
 del x1
 
+print(len(set(allNodules["SeriesID"]))); exit()
+print(len(IDs)); exit()
+
 # save all nodules in numpy form
 for id in IDs:
     print(id)
