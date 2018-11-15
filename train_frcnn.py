@@ -96,7 +96,10 @@ else:
     # set the path to weights based on backend and model
     C.base_net_weights = nn.get_weight_path()
 
-all_imgs, classes_count, class_mapping = get_data(options.train_path, C)
+if C.use3d == False:
+    all_imgs, classes_count, class_mapping = get_data(options.train_path)
+else:
+    all_imgs, classes_count, class_mapping = get_data(options.train_path, C)
 
 # check classes
 if 'bg' not in classes_count:
@@ -124,7 +127,6 @@ data_gen_train = data_generators.get_anchor_gt(train_imgs, classes_count, C, nn.
                                                K.image_dim_ordering(), mode='train')
 data_gen_val = data_generators.get_anchor_gt(val_imgs, classes_count, C, nn.get_img_output_length,
                                              K.image_dim_ordering(), mode='val')
-
 if C.use3d == False:
     input_shape_img = (None, None, 3)
     roi_input = Input(shape=(None, 4))

@@ -16,8 +16,10 @@ def augment(img_data, C, augment=True):
     if C.use3d == False:
         img_data_aug = copy.deepcopy(img_data)
         img = cv2.imread(img_data_aug['filepath'])
+
         if augment:
             rows, cols = img.shape[:2]
+
             if C.use_horizontal_flips and np.random.randint(0, 2) == 0:
                 img = cv2.flip(img, 1)
                 for bbox in img_data_aug['bboxes']:
@@ -25,6 +27,7 @@ def augment(img_data, C, augment=True):
                     x2 = bbox['x2']
                     bbox['x2'] = cols - x1
                     bbox['x1'] = cols - x2
+
             if C.use_vertical_flips and np.random.randint(0, 2) == 0:
                 img = cv2.flip(img, 0)
                 for bbox in img_data_aug['bboxes']:
@@ -32,6 +35,7 @@ def augment(img_data, C, augment=True):
                     y2 = bbox['y2']
                     bbox['y2'] = rows - y1
                     bbox['y1'] = rows - y2
+
             if C.rot_90:
                 angle = np.random.choice([0, 90, 180, 270], 1)[0]
                 if angle == 270:
@@ -44,6 +48,7 @@ def augment(img_data, C, augment=True):
                     img = cv2.flip(img, 1)
                 elif angle == 0:
                     pass
+
                 for bbox in img_data_aug['bboxes']:
                     x1 = bbox['x1']
                     x2 = bbox['x2']
@@ -66,68 +71,17 @@ def augment(img_data, C, augment=True):
                         bbox['y2'] = x2
                     elif angle == 0:
                         pass
-            img_data_aug['width'] = img.shape[0]
-            img_data_aug['height'] = img.shape[1]
-        else:
-            img_data_aug = copy.deepcopy(img_data)
-            # img = cv2.imread(img_data_aug['filepath'])
-            img = np.load('/home/cc/Data/' + img_data_aug['filepath'])
-            img = np.transpose(img, (1, 2, 0))
-            # if augment:
-            #     rows, cols = img.shape[:2]
-            #     if C.use_horizontal_flips and np.random.randint(0, 2) == 0:
-            #         img = cv2.flip(img, 1)
-            #         for bbox in img_data_aug['bboxes']:
-            #             x1 = bbox['x1']
-            #             x2 = bbox['x2']
-            #             bbox['x2'] = cols - x1
-            #             bbox['x1'] = cols - x2
-            #     if C.use_vertical_flips and np.random.randint(0, 2) == 0:
-            #         img = cv2.flip(img, 0)
-            #         for bbox in img_data_aug['bboxes']:
-            #             y1 = bbox['y1']
-            #             y2 = bbox['y2']
-            #             bbox['y2'] = rows - y1
-            #             bbox['y1'] = rows - y2
-            #     if C.rot_90:
-            #         angle = np.random.choice([0, 90, 180, 270], 1)[0]
-            #         if angle == 270:
-            #             img = np.transpose(img, (1, 0, 2))
-            #             img = cv2.flip(img, 0)
-            #         elif angle == 180:
-            #             img = cv2.flip(img, -1)
-            #         elif angle == 90:
-            #             img = np.transpose(img, (1, 0, 2))
-            #             img = cv2.flip(img, 1)
-            #         elif angle == 0:
-            #             pass
-            #         for bbox in img_data_aug['bboxes']:
-            #             x1 = bbox['x1']
-            #             x2 = bbox['x2']
-            #             y1 = bbox['y1']
-            #             y2 = bbox['y2']
-            #             if angle == 270:
-            #                 bbox['x1'] = y1
-            #                 bbox['x2'] = y2
-            #                 bbox['y1'] = cols - x2
-            #                 bbox['y2'] = cols - x1
-            #             elif angle == 180:
-            #                 bbox['x2'] = cols - x1
-            #                 bbox['x1'] = cols - x2
-            #                 bbox['y2'] = rows - y1
-            #                 bbox['y1'] = rows - y2
-            #             elif angle == 90:
-            #                 bbox['x1'] = rows - y2
-            #                 bbox['x2'] = rows - y1
-            #                 bbox['y1'] = x1
-            #                 bbox['y2'] = x2
-            #             elif angle == 0:
-            #                 pass
-            img_data_aug['width'] = img.shape[0]
-            img_data_aug['height'] = img.shape[1]
 
+        img_data_aug['width'] = img.shape[1]
+        img_data_aug['height'] = img.shape[0]
         return img_data_aug, img
-
+    else:
+        img_data_aug = copy.deepcopy(img_data)
+        img = np.load(img_data_aug['filepath'])
+        img_data_aug['width'] = img.shape[1]
+        img_data_aug['height'] = img.shape[0]
+        img_data_aug['depth'] = img.shape[2]
+        return img_data_aug, img
 
 def union(au, bu, area_intersection):
     if len(au) == 4:
@@ -173,8 +127,15 @@ def iou(a, b):
         area_u = union(a, b, area_i)
         return float(area_i) / float(area_u + 1e-6)
 
+def get_new_img_size3d(width, height, depth, img_min_side=600):
+    min_size = min(width, height, depth)
+    resized_height = int(float(img_min_side) * height / min_size)
+    resized_width = int(float(img_min_side) * width / min_size)
+    resized_depth = int(float(img_min_side) * depth / min_size)
+    return resized_width, resized_height, resized_depth
 
-def get_new_img_size(width, height, depth=None, img_min_side=600):
+
+def get_new_img_size(width, height, img_min_side=600):
     # if depth==None:
     #     if width <= height:
     #         resized_height = int(float(img_min_side) * height / width)
@@ -184,18 +145,10 @@ def get_new_img_size(width, height, depth=None, img_min_side=600):
     #         resized_height = img_min_side
     #     return resized_width, resized_height
     # else:
-    if depth == None:
-        min_size = min(width, height)
-    else:
-        min_size = min(width, height, depth)
+    min_size = min(width, height)
     resized_height = int(float(img_min_side) * height / min_size)
     resized_width = int(float(img_min_side) * width / min_size)
-    if depth == None:
-        return resized_width, resized_height
-    else:
-        resized_depth = int(float(img_min_side) * depth / min_size)
-        return resized_width, resized_height, resized_depth
-
+    return resized_width, resized_height
 
 class SampleSelector:
     def __init__(self, class_count):
@@ -647,7 +600,7 @@ def get_anchor_gt(all_img_data, class_count, C, img_length_calc_function, backen
                     assert rows == height
 
                     # get image dimensions for resizing
-                    (resized_width, resized_height) = get_new_img_size(width, height, C.im_size)
+                    (resized_width, resized_height) = get_new_img_size(width, height)
                     # resize the image so that smallest side is length = 600px
                     x_img = cv2.resize(x_img, (resized_width, resized_height), interpolation=cv2.INTER_CUBIC)
                     try:
@@ -673,7 +626,6 @@ def get_anchor_gt(all_img_data, class_count, C, img_length_calc_function, backen
                         x_img = np.transpose(x_img, (0, 2, 3, 1))
                         y_rpn_cls = np.transpose(y_rpn_cls, (0, 2, 3, 1))
                         y_rpn_regr = np.transpose(y_rpn_regr, (0, 2, 3, 1))
-
                     yield np.copy(x_img), [np.copy(y_rpn_cls), np.copy(y_rpn_regr)], img_data_aug
                 else:
                     if C.balanced_classes and sample_selector.skip_sample_for_balanced_class(img_data):
@@ -693,7 +645,7 @@ def get_anchor_gt(all_img_data, class_count, C, img_length_calc_function, backen
                     assert zs == depth
 
                     # get image dimensions for resizing
-                    (resized_width, resized_height, resized_depth) = get_new_img_size(width, height, depth, C.im_size)
+                    (resized_width, resized_height, resized_depth) = get_new_img_size3d(width, height, depth)
                     # resize the image so that smallest side is length = 600px
                     x_img = cv2.resize(x_img, (resized_width, resized_height, resized_depth),
                                        interpolation=cv2.INTER_CUBIC)

@@ -41,14 +41,16 @@ slicefail = False
 
 
 def getZindices(imageDict, minz, maxz):
-    minZIndex = list(imageDict.keys()).index(minz)
-    maxZIndex = list(imageDict.keys()).index(maxz)
-    if minZIndex < 0 or maxZIndex > len(imageDict):  # for debugging
-        print("Slice out of range")
+    try:
+        minZIndex = list(imageDict.keys()).index(minz)
+        maxZIndex = list(imageDict.keys()).index(maxz)
+    except:
+        pass
+    if maxz not in imageDict.keys() or minz not in imageDict.keys():  # for debugging
         slicefail = True
         print('z index error out of bounds')
-        return None, None
-    return list(imageDict.keys()).index(minz), list(imageDict.keys()).index(maxz)
+        return None, None, True
+    return list(imageDict.keys()).index(minz), list(imageDict.keys()).index(maxz), False
 
 
 fileextnesion = '.pickle'
@@ -97,51 +99,32 @@ counterx = 0
 
 
 for i in range(len(allNodules)):
+    print(i)
     # check slice thickness <= 2.5
-    if allNodules["SliceThickness"][i] <= 2.5:
-        # print('st <= 2.5')
-        nodeID = allNodules["NoduleID"][i]
-        seriesID = allNodules["SeriesID"][i]
+    #if allNodules["SliceThickness"][i] <= 2.5:
+    nodeID = allNodules["NoduleID"][i]
+    seriesID = allNodules["SeriesID"][i]
 
-        if prevID != seriesID:
+    # processing positive volumes
+    if nodeID in noduleSet:
+        # open seriesID pickle file from Data
+        tempdict = pickle.load(open(savePath + str(seriesID), "rb"))
+        # sort by z, imageDict will Dict w/ keys=z value, values=2d ct scan
+        imageDict = OrderedDict(sorted(tempdict.items(), key=lambda t: t[0]))
+        del tempdict
 
-            counter += 1
-            # check seriesID repeat
-            if prevID in seriesIDset:
-                print("Repeat Series ID: " + str(prevID))
-            else:
-                seriesIDset.add(prevID)
-            # print progress 
-            if counter % 100 == 0:
-                print(str(counter) + " Done")
-            # open seriesID pickle file from Data
-            tempdict = pickle.load(open(savePath + str(seriesID), "rb"))
-            # sort by z, imageDict will Dict w/ keys=z value, values=2d ct scan
-            imageDict = OrderedDict(sorted(tempdict.items(), key=lambda t: t[0]))
-            del tempdict
+        print(allNodules["minimumZ"][i], allNodules["maximumZ"][i])
+        print(min(imageDict.keys()), max(imageDict.keys()))
 
-        # processing positive volumes
-        prevID = seriesID
-        if nodeID in noduleSet:
-            minZind, maxZind = getZindices(imageDict, allNodules["minimumZ"][i], allNodules["maximumZ"][i])
-            if slicefail:
-                print("Slices out of range: " + str(nodeID))
-                slicefail = False
-                takeNegativeSample = False
-
+        minZind, maxZind, slicefail = getZindices(imageDict, allNodules["minimumZ"][i], allNodules["maximumZ"][i])
+        if slicefail:
+            print("Slices out of range: " + str(nodeID))
+            slicefail = False
+        else: 
             positivelist.append([str(seriesID),
-                                 str(allNodules["minimumX"][i]), str(allNodules["maximumX"][i]),
-                                 str(allNodules["minimumY"][i]), str(allNodules["maximumY"][i]),
-                                 str(minZind), str(maxZind),
-                                 'pos'])
-
-print("Neg Parse fails: " + str(len(pfailedneglist)))
-print("Neg Size fails: " + str(len(sfailedneglist)))
-print("Pos Parse fails: " + str(len(pfailedposlist)))
-print("Pos Size fails: " + str(len(sfailedposlist)))
-
-print("Positive samples: " + str(len(positivelist)))
-print("Negative samples: " + str(len(negativelist)))
+                str(allNodules["minimumX"][i]), str(allNodules["maximumX"][i]),
+                str(allNodules["minimumY"][i]), str(allNodules["maximumY"][i]),
+                str(minZind), str(maxZind), 'pos'])
 
 # save poslist to file
 with open("data.txt", 'w') as f:
