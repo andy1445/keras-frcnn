@@ -168,12 +168,17 @@ del nodulesToUse
 del x1
 
 # save all nodules in numpy form
-for id in IDs:
+print(IDs[:int(len(IDs)/2)])
+
+for id in IDs[int(len(IDs)/2):]:
+    print(id)
     with open(savePath + str(id), "rb") as f:
         loadedData = pickle.load(f)
         imageDict = OrderedDict(sorted(loadedData.items(), key=lambda t: t[0]))
         npmatrix = np.array(list(imageDict.values()))
+        npmatrix = np.transpose(npmatrix, (1,2,0))
         np.save(savePath + str(id) + '.npy', npmatrix)
+        print(npmatrix.shape)
 
 # headerList = list(allNodules)
 prevID = None
